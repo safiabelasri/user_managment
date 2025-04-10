@@ -2,8 +2,9 @@
   "name": "deploye",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "commonjs", 
   "scripts": {
-    "start": "node server.js"
+    "test": "mocha ./test/api.test.js"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +17,11 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "chai-http": "^5.1.1",
+    "mocha": "^11.1.0",
+    "supertest": "^7.1.0"
   }
 }

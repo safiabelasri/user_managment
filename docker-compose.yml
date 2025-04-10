@@ -1,9 +1,11 @@
-version: '3'
+# SUPPRIMEZ la ligne version: '3.8'
+
 services:
-  api:
+  backend:
     build: .
+    backend:
     ports:
-      - "5000:5000"
+      - '5000:5000'
     volumes:
       - ./users.db:/app/users.db
       - ./server.js:/app/server.js
@@ -16,9 +18,5 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
-    depends_on:
-      - api
-    environment:
-      - REACT_APP_API_URL=http://api:5000
+      - '3000:80'
     restart: always

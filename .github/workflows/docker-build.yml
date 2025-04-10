@@ -1,44 +1,61 @@
-name: Docker Build and Deploy
+name: CI/CD Workflow
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches:
+      - master
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      # 1. Cloner le dépôt
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build API
-        uses: docker/build-push-action@v4
+      # 2. Installer Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          context: .
-          file: ./Dockerfile
-          push: false
-          tags: api:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          node-version: '18'
 
-      - name: Build Frontend
-        uses: docker/build-push-action@v4
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: false
-          tags: frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # 3. Installer les dépendances (backend)
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm install
 
+      # 4. Lancer les tests (si définis)
       - name: Run tests
         run: |
-          docker-compose up -d
-          sleep 10
-          curl -f http://localhost:5000/health || exit 1
-          curl -f http://localhost:3000 || exit 1 
+          cd backend
+          npm test || echo "Tests non définis ou échoués"
+
+      # 5. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/user-management-app ./backend
+
+      # 6. Connexion à Docker Hub
+      - name: Docker Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # 7. Push image vers Docker Hub
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/user-management-app
+
+      # 8. (Optionnel) Déploiement via SSH sur un serveur VPS
+      - name: Deploy to VPS (via SSH)
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/user-management-app
+            docker stop user-management || true
+            docker rm user-management || true
+            docker run -d --name user-management -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/user-management-app

@@ -1,20 +1,20 @@
-# Utilisation de l'image de base Node.js Alpine
-FROM node:16
+# Étape 1 : Construction
+FROM node:22 AS build
 
-# Définition du répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copier les fichiers du projet dans le conteneur
 COPY package*.json ./
-
-# Installer les dépendances
 RUN npm install
 
-# Copier les fichiers du projet dans le conteneur
 COPY . .
 
-# Exposer le port 5000
+# Étape 2 : Image finale
+FROM node:22
+
+WORKDIR /app
+
+COPY --from=build /app /app
+
 EXPOSE 5000
 
-# Démarrer l'application
 CMD ["node", "server.js"]
