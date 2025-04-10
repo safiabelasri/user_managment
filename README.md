@@ -19,10 +19,87 @@ Une application fullstack pour gérer des utilisateurs, construite avec :
 ```bash
 docker-compose up --build
 
-Documentation de l'API :
-Méthode	Endpoint	Description	Corps attendu (JSON)	Réponse HTTP
-GET	/users	Récupère tous les utilisateurs	–	200 OK
-POST	/users	Ajoute un nouvel utilisateur	{id: 4,name: 'Safia Belasri',email: 'admin@gmail.com',rôle: 'Admin'},	201 Created
-PUT	/users/:id	Modifie un utilisateur existant	{id: 4,name: 'Safia Belasri',email: 'admin@gmail.com',rôle: 'Admin'},	200 OK
-DELETE	/users/:id	Supprime un utilisateur		200 OK
+Documentation de l'API – Backend Express.js
+L’API permet d’effectuer les opérations CRUD (Create, Read, Update, Delete) sur les utilisateurs.
+
+🔗 URL de base
+arduino
+Copier
+Modifier
+http://localhost:5000
+🔍 GET /users
+Description : Récupère la liste de tous les utilisateurs.
+Requête : aucune
+Réponse :
+
+json
+Copier
+Modifier
+[
+  {
+    "id": 1,
+    "name": "Jean Dupont",
+    "email": "jean@example.com"
+  },
+  ...
+]
+Code HTTP : 200 OK
+
+➕ POST /users
+Description : Crée un nouvel utilisateur.
+Corps attendu :
+
+json
+Copier
+Modifier
+{
+  "name": "Jean Dupont",
+  "email": "jean@example.com"
+}
+Réponse :
+
+json
+Copier
+Modifier
+{
+  "message": "Utilisateur ajouté avec succès"
+}
+Code HTTP : 201 Created
+
+📝 PUT /users/:id
+Description : Modifie les informations d’un utilisateur par ID.
+Exemple d’URL : /users/1
+Corps attendu :
+
+json
+Copier
+Modifier
+{
+  "name": "Jean Dupont",
+  "email": "jean@example.com"
+}
+Réponse :
+
+json
+Copier
+Modifier
+{
+  "message": "Utilisateur mis à jour"
+}
+Code HTTP : 200 OK
+
+❌ DELETE /users/:id
+Description : Supprime un utilisateur par ID.
+Exemple d’URL : /users/1
+Réponse :
+
+json
+Copier
+Modifier
+{
+  "message": "Utilisateur supprimé"
+}
+Code HTTP : 200 OK
+
+
 
