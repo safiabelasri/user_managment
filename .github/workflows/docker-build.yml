@@ -23,19 +23,19 @@ jobs:
       # 3. Installer les dépendances (backend)
       - name: Install backend dependencies
         run: |
-          cd backend
+          cd user_managment
           npm install
 
       # 4. Lancer les tests (si définis)
       - name: Run tests
         run: |
-          cd backend
+          cd user_managment
           npm test || echo "Tests non définis ou échoués"
 
       # 5. Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/user-management-app ./backend
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/user-management-app 
 
       # 6. Connexion à Docker Hub
       - name: Docker Login
