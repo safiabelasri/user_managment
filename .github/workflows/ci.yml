@@ -1,9 +1,9 @@
-name: CI/CD Workflow
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - master
+      - main  # Préférer 'main' plutôt que 'master' (convention moderne)
 
 jobs:
   build-and-deploy:
@@ -12,50 +12,61 @@ jobs:
     steps:
       # 1. Cloner le dépôt
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Version mise à jour
 
       # 2. Installer Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22'
+          node-version: '20'  # LTS recommandé (22 peut être instable)
+          cache: 'npm'  # Activation du cache pour npm
 
-      # 3. Installer les dépendances (backend)
-      - name: Install backend dependencies
+      # 3. Installer les dépendances et build (backend)
+      - name: Install & Build Backend
         run: |
-          cd user_managment
-          npm install
+          cd user_management  # Correction orthographique (managment -> management)
+          npm ci              # 'npm ci' pour une installation plus fiable que 'npm install'
+          npm run build --if-present
 
-      # 4. Lancer les tests (si définis)
-      - name: Run tests
+      # 4. Tests
+      - name: Run Tests
         run: |
-          cd user_managment
-          npm test || echo "Tests non définis ou échoués"
+          cd user_management
+          npm test || echo "Tests skipped (no test suite or failure)"
 
-      # 5. Build Docker image
-      - name: Build Docker image
+      # 5. Build Docker
+      - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.safiabelasi }}/user-management-app 
+          docker build -t user-management-app .  # Tag générique avant retag
+          docker tag user-management-app ${{ secrets.safia }}/user-management-app:latest
 
-      # 6. Connexion à Docker Hub
-      - name: Docker Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.safiabelasri }}" --password-stdin
-
-      # 7. Push image vers Docker Hub
-      - name: Push Docker image
+      # 6. Login Docker Hub
+      - name: Login to Docker Hub
+        if: github.ref == 'refs/heads/main'  # Exécution uniquement sur main
         run: |
-          docker push ${{ secrets.safiabelasri }}/user-management-app
+          echo "${{ secrets.safia }}" | docker login -u "${{ secrets.safia }}" --password-stdin
 
-      # 8. (Optionnel) Déploiement via SSH sur un serveur VPS
-      - name: Deploy to VPS (via SSH)
+      # 7. Push Docker Image
+      - name: Push to Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker push ${{ secrets.safia }}/user-management-app:latest
+
+      # 8. Déploiement VPS
+      - name: Deploy to VPS
         if: github.ref == 'refs/heads/main'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
+          username: ${{ secrets.safia }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.safiabelasri }}/user-management-app
+            docker pull ${{ secrets.safia }}/user-management-app:latest
             docker stop user-management || true
             docker rm user-management || true
-            docker run -d --name user-management -p 5000:5000 ${{ secrets.safiabelasri }}/user-management-app
+            docker run -d \
+              --name user-management \
+              --restart unless-stopped \  # Redémarrage automatique
+              -p 5000:5000 \
+              -e NODE_ENV=production \   # Variable d'environnement
+              ${{ secrets.safia }}/user-management-app:latest
