@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Préférer 'main' plutôt que 'master' (convention moderne)
+      - master 
 
 jobs:
   build-and-deploy:
@@ -38,30 +38,30 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t user-management-app .  # Tag générique avant retag
-          docker tag user-management-app ${{ secrets.safia }}/user-management-app:latest
+          docker tag user-management-app safiabelasri/user-management-app:latest
 
       # 6. Login Docker Hub
       - name: Login to Docker Hub
         if: github.ref == 'refs/heads/main'  # Exécution uniquement sur main
         run: |
-          echo "${{ secrets.safia }}" | docker login -u "${{ secrets.safia }}" --password-stdin
+          echo safiabelasri | docker login -u "Safia2705." --password-stdin
 
       # 7. Push Docker Image
       - name: Push to Docker Hub
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         run: |
-          docker push ${{ secrets.safia }}/user-management-app:latest
+          docker push safiabelasri/user-management-app:latest
 
       # 8. Déploiement VPS
       - name: Deploy to VPS
         if: github.ref == 'refs/heads/main'
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.safia }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: 5000
+          username: safiabelasri
+          key: 5000
           script: |
-            docker pull ${{ secrets.safia }}/user-management-app:latest
+            docker pull safiabelasri/user-management-app:latest
             docker stop user-management || true
             docker rm user-management || true
             docker run -d \
@@ -69,4 +69,4 @@ jobs:
               --restart unless-stopped \  # Redémarrage automatique
               -p 5000:5000 \
               -e NODE_ENV=production \   # Variable d'environnement
-              ${{ secrets.safia }}/user-management-app:latest
+              safiabelasri/user-management-app:latest
